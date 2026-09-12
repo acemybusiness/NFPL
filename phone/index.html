@@ -15,7 +15,7 @@
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover">
 <meta name="theme-color" content="#071a33">
-<title>NFPL Phone Control 3.7.5 — Clean Season</title>
+<title>NFPL Phone Control 3.7.6 — Scroll + Clear Standings</title>
 <style>
 :root{--navy:#071a33;--navy2:#0b2447;--panel:#102a4d;--panel2:#1b365d;--blue:#2d9cff;--orange:#ff8a00;--orange2:#ffae32;--ice:#f4f8fc;--line:#294b70;--muted:#9db6ce;--good:#29c477;--danger:#eb5b5b;--shadow:0 10px 24px rgba(0,0,0,.24)}
 *{box-sizing:border-box}html{background:#04101f}body{margin:0;background:linear-gradient(180deg,#06152a,#081b34 260px,#06152a);font-family:Inter,ui-sans-serif,system-ui,-apple-system,"Segoe UI",sans-serif;color:#fff;min-height:100vh}button,input,select{font:inherit}button{cursor:pointer}.app{width:min(1180px,100%);margin:auto;padding:10px 10px 78px}.hero{position:relative;top:auto;z-index:2;background:rgba(7,26,51,.96);backdrop-filter:blur(12px);border:1px solid #233f61;border-radius:18px;padding:10px 12px;box-shadow:var(--shadow)}.head{display:flex;justify-content:space-between;align-items:center;gap:10px}.head h1{font-size:clamp(1.2rem,4vw,1.8rem);margin:0}.version{color:var(--orange2);font-weight:1000;font-size:.82rem}.save-pill{font-size:.7rem;color:#a9c7e4;font-weight:800}.tabs{display:flex;gap:6px;overflow:auto;padding-top:9px;scrollbar-width:none}.tabs::-webkit-scrollbar{display:none}.tab{white-space:nowrap;border:1px solid #2d5178;background:#0d294c;color:#dcecff;border-radius:999px;padding:8px 12px;font-weight:900}.tab.active{background:var(--orange);color:#211406;border-color:var(--orange)}.page{display:none}.page.active{display:block}.card{background:linear-gradient(180deg,#102b4e,#0c2342);border:1px solid #274b70;border-radius:16px;padding:12px;margin-top:10px;box-shadow:0 8px 18px rgba(0,0,0,.16)}.section-title{display:flex;align-items:center;justify-content:space-between;gap:8px;margin-bottom:9px}.section-title h2,.section-title h3{margin:0;font-size:1.05rem}.small{font-size:.72rem;color:var(--muted);font-weight:750}.grid2{display:grid;grid-template-columns:1fr 1fr;gap:9px}.grid3{display:grid;grid-template-columns:repeat(3,1fr);gap:8px}.grid4{display:grid;grid-template-columns:repeat(4,1fr);gap:8px}.field{display:grid;gap:4px}.field label,.field>span{font-size:.72rem;color:#b8d0e7;font-weight:950;text-transform:uppercase;letter-spacing:.04em}.field input,.field select,input,select{width:100%;min-width:0;border:2px solid #dfe8f1;background:#f8fbff;color:#112033;border-radius:10px;padding:10px 11px;font-weight:900;outline:0}input:focus,select:focus{border-color:var(--orange);box-shadow:0 0 0 3px rgba(255,138,0,.15)}button.primary,button.secondary,button.danger,button.good{border:0;border-radius:10px;padding:10px 12px;font-weight:1000;min-height:42px}.primary{background:linear-gradient(180deg,var(--orange2),var(--orange));color:#231606;box-shadow:0 3px 0 #9a4a00}.secondary{background:#dceeff;color:#124d82}.danger{background:#ffdddd;color:#8f1f1f}.good{background:#bff4d8;color:#075f34}.row{display:flex;gap:8px;align-items:center;flex-wrap:wrap}.grow{flex:1}.toast{position:fixed;left:50%;bottom:82px;transform:translateX(-50%);background:#06172c;border:1px solid var(--orange);padding:10px 14px;border-radius:12px;font-weight:900;display:none;z-index:99;max-width:90vw;text-align:center}
@@ -7915,6 +7915,7 @@ function renderLive(){
       <div class="live-action-row">
         <button class="secondary" onclick="saveLiveHighHand()">Save / Update HH</button>
         <button class="secondary" onclick="openLivePrintPreview()">Print Preview</button>
+        <button class="danger clear-standings-btn" onclick="clearStandingsInformation()">Clear Standings</button>
       </div>
     </div>
     <div class="table-wrap live-table-wrap"><table class="standings weekly-hh-standings live-standings-table"><thead><tr><th>Pos</th><th>Behind</th><th class="player-col">Player</th><th>Drop</th><th>Total</th><th>Bounties</th>${liveWeekHeads()}<th>Notes</th><th>Actions</th></tr></thead><tbody>${buildLiveStandingsRows(false)}</tbody></table></div>
@@ -7922,6 +7923,56 @@ function renderLive(){
 }
 function editHighHandForWeek(w){const week=w+1;const existing=state.highHands.find(h=>formatWeekLabel(h.week)===`W${week}`);const playerName=existing?.player||'';const hand=prompt(`Week ${week} High Hand${playerName?' — '+playerName:''}`,existing?.hand||'');if(hand===null)return;const cleaned=hand.trim();if(!cleaned)return toast('Enter the High Hand');let p=playerName;if(!p){p=prompt(`Who won Week ${week} High Hand?`,state.players[0]?.name||'')||'';p=p.trim();if(!p)return toast('Enter the High Hand winner');}const idx=state.highHands.findIndex(h=>formatWeekLabel(h.week)===`W${week}`);const entry={week:`W${week}`,player:p,hand:cleaned,updatedAt:Date.now()};if(idx>=0)state.highHands[idx]={...state.highHands[idx],...entry};else state.highHands.push(entry);const a=archiveForWeek(week);if(a)upsertWeekArchive(week,a.name||`Week ${week}`);save();render();toast(`High Hand saved for W${week}`)}
 function saveLiveHighHand(){const p=$('liveHHPlayer')?.value,h=$('liveHHHand')?.value.trim();if(!h)return toast('Enter the High Hand');const week=`W${state.currentWeek}`;const existing=state.highHands.findIndex(x=>formatWeekLabel(x.week)===week);if(existing>=0)state.highHands[existing]={...state.highHands[existing],week,player:p,hand:h,updatedAt:Date.now()};else state.highHands.push({week,player:p,hand:h,updatedAt:Date.now()});if(archiveForWeek(state.currentWeek))upsertWeekArchive(state.currentWeek,archiveForWeek(state.currentWeek)?.name||`Week ${state.currentWeek}`);save();render();toast('High Hand saved for '+week)}
+
+function clearStandingsInformation(){
+  if(!confirm('Clear ALL standings and weekly results for this season?\\n\\nThis keeps the player roster, setup, blind levels and saved League/Game settings. The cleared standings will also replace the AMB shared standings copy.'))return;
+
+  state.currentWeek=1;
+  state.highHands=[];
+  state.lockedWeeks=[];
+  state.archives=[];
+  state.history=[];
+  state.completedWeeks=[];
+  state.weekAttendance={};
+  state.outOrder=[];
+  state.knockoutLog=[];
+  state.rebuyLog=[];
+  state.tournamentStarted=false;
+  state.finalTableSet=false;
+  state.moveHighlights=[];
+  state.currentBlind=0;
+
+  (state.players||[]).forEach(p=>{
+    p.scores=[];
+    p.out=false;
+    p.lastOutOrder=null;
+    p.eliminatedBy='';
+    p.lastKnockedOutBy='';
+    p.lastKnockoutTable=null;
+    p.lastKnockoutSeat=null;
+    p.bounties=0;
+    p.knockouts=0;
+    p.rebuys=0;
+    p.addon1s=0;
+    p.addon2s=0;
+    p.addons=0;
+    p.addonTransactions=[];
+  });
+
+  const first=state.settings?.blindLevels?.[0]||{min:15};
+  state.clock={running:false,left:Number(first.min||15)*60,last:Date.now()};
+
+  save();
+  render();
+  toast('Standings cleared • Week 1 ready');
+
+  /* Clearing standings is an explicit owner action: make the clean copy authoritative in AMB. */
+  try{
+    nfplLastSyncedState='';
+    if(typeof syncPush==='function' && syncHosted())setTimeout(()=>syncPush(true),120);
+  }catch(e){}
+}
+
 function markOut(id){const p=player(id);if(!p||p.out)return;snapshot('player out');p.out=true;p.lastOutOrder=state.outOrder.length+1;if(!state.outOrder.includes(id))state.outOrder.push(id);forceRemoveFromSeats(id);syncCurrentWeekPlaces();const winner=finalizeWeekIfWinner();save();render();if(winner){toast(`Week ${state.currentWeek} complete • ${winner.name} wins • archive saved`);return;}checkTableStructure('player out')}
 function quickRebuy(id){const p=player(id);if(!p)return;const m=state.settings.money||{};if(!p.out)return toast(p.name+' is still active');const active=(Number(m.rebuy||0)>0||Number(m.rebuyChips||0)>0);if(!active)return toast('Rebuy is off. Add an amount or chip count in Setup.');const stop=Math.max(1,Number(m.rebuyStopLevel||state.settings.blindLevels.length));if((state.currentBlind+1)>stop)return toast('Rebuys stopped after Level '+stop);snapshot('rebuy');p.rebuys=Number(p.rebuys||0)+1;state.rebuyLog.push({id:uid(),time:Date.now(),week:state.currentWeek,playerId:p.id,playerName:p.name,amount:Number(m.rebuy||0),chips:Number(m.rebuyChips||0),blindLevel:state.currentBlind+1,knockoutEventId:null,killerId:p.lastKnockedOutBy||'',killerName:p.lastKnockedOutBy&&player(p.lastKnockedOutBy)?player(p.lastKnockedOutBy).name:''});p.out=false;p.lastOutOrder=null;p.stack=Number(m.rebuyChips||state.settings.startingStack||0);state.outOrder=state.outOrder.filter(x=>x!==id);const t=state.tables.find(t=>t.id===p.lastKnockoutTable);if(t){const idx=Math.max(0,Number(p.lastKnockoutSeat||1)-1);if(t.seats[idx]&&!t.seats[idx].playerId){t.seats[idx].playerId=p.id;p.table=t.id;p.seat=idx+1}else{const open=t.seats.findIndex(s=>!s.playerId);if(open>=0){t.seats[open].playerId=p.id;p.table=t.id;p.seat=open+1}}}syncTrackedPlayerStats();syncCurrentWeekPlaces();save();render();toast(`${p.name} rebuy #${trackedPlayerStats(p).rebuys} • $${Number(m.rebuy||0)} • ${Number(m.rebuyChips||0)} chips`)}
 function openAddon(id){const p=player(id);if(!p)return;const m=state.settings.money||{};const max=Math.max(0,Number(m.addonCount||0));if(max<=0)return toast('Add Ons are off. Configure them in Setup.');const used=Number(p.addons||0);if(used>=max)return toast(p.name+' already used all '+max+' Add Ons');const rule=addonRuleForIndex(used);if(!rule||(Number(rule.amount||0)<=0&&Number(rule.chips||0)<=0))return toast('Add On '+(used+1)+' has no amount or chip count configured.');const current=state.currentBlind+1,until=Math.max(1,Number(rule.untilLevel||1));if(current>until)return toast('Add On '+(used+1)+' closed after Level '+until);addonTarget=id;let wrap=document.getElementById('addonModal');if(!wrap){wrap=document.createElement('div');wrap.id='addonModal';wrap.className='ko-modal-wrap';document.body.appendChild(wrap)}wrap.innerHTML=`<div class="ko-modal"><h3>Add On ${used+1} for ${esc(p.name)}</h3><p>${used} of ${max} used • Available through Level ${until} • $${Number(rule.amount||0)} • ${Number(rule.chips||0)} chips</p><div class="ko-list"><button class="ko-choice" onclick="applyAddon()"><span><b>Apply Add On ${used+1}</b><small>$${Number(rule.amount||0)} • +${Number(rule.chips||0)} chips</small></span></button></div><button class="ko-cancel" onclick="closeAddon()">Cancel</button></div>`}
@@ -7973,6 +8024,23 @@ function reconcileCurrentWeekRosterSnapshot(){
 function refreshCurrentWeekRosterPoints(){
   const week=Math.max(1,Number(state.currentWeek||1));
   const idx=week-1;
+
+  const noStartedWeek=!state.tournamentStarted &&
+    !(state.weekAttendance&&state.weekAttendance[week]) &&
+    (!Array.isArray(state.outOrder)||state.outOrder.length===0);
+
+  if(noStartedWeek){
+    const roster=leagueRosterPlayers();
+    roster.forEach(p=>{
+      if(Array.isArray(p.scores) && p.scores.length>idx)p.scores[idx]=null;
+    });
+    return {
+      week,roster,checked:roster.filter(p=>p.checkedIn),absent:roster.filter(p=>!p.checkedIn),
+      outIds:[],remaining:roster.filter(p=>p.checkedIn),scoreById:new Map(),
+      absentScore:roster.length,firstOutScore:Math.max(0,roster.length-1),attendanceLocked:false
+    };
+  }
+
   const info=currentWeekPlaceRows();
 
   info.roster.forEach(p=>{
@@ -11150,7 +11218,7 @@ input:focus,select:focus{
 
 <script id="nfpl-pv2-sync-script">
 const NFPL_SYNC_CONFIG_KEY='nfpl_pv2_sync_config';
-const NFPL_APP_VERSION='NFPL-Phone-v3.7.5';
+const NFPL_APP_VERSION='NFPL-Phone-v3.7.6';
 const NFPL_SYNC_ENDPOINT_KEY='nfpl_amb_sync_endpoint';
 function syncEndpoint(){
   return String(localStorage.getItem(NFPL_SYNC_ENDPOINT_KEY)||window.NFPL_SYNC_ENDPOINT||'').trim();
@@ -15052,25 +15120,52 @@ render();
 <style id="nfpl-v375-hard-remove-event-note">
 .event-mode-note{display:none!important;height:0!important;min-height:0!important;max-height:0!important;margin:0!important;padding:0!important;overflow:hidden!important}
 </style>
-<script id="nfpl-v375-remove-event-note">
-(function(){
-  function removeOldLeagueHelper(){
-    document.querySelectorAll('.event-mode-note').forEach(el=>el.remove());
-    document.querySelectorAll('*').forEach(el=>{
-      if(el.children.length===0){
-        const t=(el.textContent||'').trim();
-        if(t.includes('League mode keeps the season, weekly standings and normal NFPL league flow') ||
-           t.includes('Saved League / Game data is shared automatically through AMB')){
-          el.remove();
-        }
-      }
-    });
+
+
+
+<style id="nfpl-v376-scroll-clear-standings">
+@media (max-width:760px){
+  html,body{
+    min-height:100%!important;
+    height:auto!important;
+    overflow-x:hidden!important;
+    overflow-y:auto!important;
+    touch-action:pan-y!important;
+    -webkit-overflow-scrolling:touch!important;
   }
-  document.addEventListener('DOMContentLoaded',removeOldLeagueHelper);
-  const mo=new MutationObserver(removeOldLeagueHelper);
-  mo.observe(document.documentElement,{childList:true,subtree:true});
-})();
-</script>
+  body.setup-locked{
+    min-height:0!important;
+    height:auto!important;
+    overflow-y:auto!important;
+    touch-action:pan-y!important;
+  }
+  .app,#pages,.page,.page.active{
+    min-height:0!important;
+    height:auto!important;
+    max-height:none!important;
+    overflow:visible!important;
+  }
+  .live-standings-card,
+  .live-table-wrap,
+  .table-wrap{
+    max-height:none!important;
+    height:auto!important;
+    overflow-y:visible!important;
+  }
+
+  .live-action-row{
+    display:grid!important;
+    grid-template-columns:1fr 1fr!important;
+    gap:6px!important;
+  }
+  .live-action-row .clear-standings-btn{
+    grid-column:1/-1!important;
+    min-height:38px!important;
+    font-size:.78rem!important;
+    font-weight:1000!important;
+  }
+}
+</style>
 
 </body>
 </html>
