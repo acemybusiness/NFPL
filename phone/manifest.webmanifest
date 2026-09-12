@@ -1,0 +1,10 @@
+{
+  "name": "NFPL Game Control",
+  "short_name": "NFPL Control",
+  "id": "/phone/",
+  "start_url": "./",
+  "scope": "./",
+  "display": "standalone",
+  "background_color": "#05090d",
+  "theme_color": "#05090d"
+}
