@@ -15,7 +15,7 @@
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover">
 <meta name="theme-color" content="#071a33">
-<title>NFPL Phone Control 3.7.4 — Table Row + Blinds Below</title>
+<title>NFPL Phone Control 3.7.5 — Clean Season</title>
 <style>
 :root{--navy:#071a33;--navy2:#0b2447;--panel:#102a4d;--panel2:#1b365d;--blue:#2d9cff;--orange:#ff8a00;--orange2:#ffae32;--ice:#f4f8fc;--line:#294b70;--muted:#9db6ce;--good:#29c477;--danger:#eb5b5b;--shadow:0 10px 24px rgba(0,0,0,.24)}
 *{box-sizing:border-box}html{background:#04101f}body{margin:0;background:linear-gradient(180deg,#06152a,#081b34 260px,#06152a);font-family:Inter,ui-sans-serif,system-ui,-apple-system,"Segoe UI",sans-serif;color:#fff;min-height:100vh}button,input,select{font:inherit}button{cursor:pointer}.app{width:min(1180px,100%);margin:auto;padding:10px 10px 78px}.hero{position:relative;top:auto;z-index:2;background:rgba(7,26,51,.96);backdrop-filter:blur(12px);border:1px solid #233f61;border-radius:18px;padding:10px 12px;box-shadow:var(--shadow)}.head{display:flex;justify-content:space-between;align-items:center;gap:10px}.head h1{font-size:clamp(1.2rem,4vw,1.8rem);margin:0}.version{color:var(--orange2);font-weight:1000;font-size:.82rem}.save-pill{font-size:.7rem;color:#a9c7e4;font-weight:800}.tabs{display:flex;gap:6px;overflow:auto;padding-top:9px;scrollbar-width:none}.tabs::-webkit-scrollbar{display:none}.tab{white-space:nowrap;border:1px solid #2d5178;background:#0d294c;color:#dcecff;border-radius:999px;padding:8px 12px;font-weight:900}.tab.active{background:var(--orange);color:#211406;border-color:var(--orange)}.page{display:none}.page.active{display:block}.card{background:linear-gradient(180deg,#102b4e,#0c2342);border:1px solid #274b70;border-radius:16px;padding:12px;margin-top:10px;box-shadow:0 8px 18px rgba(0,0,0,.16)}.section-title{display:flex;align-items:center;justify-content:space-between;gap:8px;margin-bottom:9px}.section-title h2,.section-title h3{margin:0;font-size:1.05rem}.small{font-size:.72rem;color:var(--muted);font-weight:750}.grid2{display:grid;grid-template-columns:1fr 1fr;gap:9px}.grid3{display:grid;grid-template-columns:repeat(3,1fr);gap:8px}.grid4{display:grid;grid-template-columns:repeat(4,1fr);gap:8px}.field{display:grid;gap:4px}.field label,.field>span{font-size:.72rem;color:#b8d0e7;font-weight:950;text-transform:uppercase;letter-spacing:.04em}.field input,.field select,input,select{width:100%;min-width:0;border:2px solid #dfe8f1;background:#f8fbff;color:#112033;border-radius:10px;padding:10px 11px;font-weight:900;outline:0}input:focus,select:focus{border-color:var(--orange);box-shadow:0 0 0 3px rgba(255,138,0,.15)}button.primary,button.secondary,button.danger,button.good{border:0;border-radius:10px;padding:10px 12px;font-weight:1000;min-height:42px}.primary{background:linear-gradient(180deg,var(--orange2),var(--orange));color:#231606;box-shadow:0 3px 0 #9a4a00}.secondary{background:#dceeff;color:#124d82}.danger{background:#ffdddd;color:#8f1f1f}.good{background:#bff4d8;color:#075f34}.row{display:flex;gap:8px;align-items:center;flex-wrap:wrap}.grow{flex:1}.toast{position:fixed;left:50%;bottom:82px;transform:translateX(-50%);background:#06172c;border:1px solid var(--orange);padding:10px 14px;border-radius:12px;font-weight:900;display:none;z-index:99;max-width:90vw;text-align:center}
@@ -6568,7 +6568,7 @@ body.standings-preview-open{overflow:hidden!important}
 <nav class="bottom" id="bottom"></nav>
 <script>
 'use strict';
-const KEY='nfpl_pv21_android_clean';
+const KEY='nfpl_pv375_clean_season';
 const NAV=[['setup','Setup'],['players','Players'],['tables','Tables'],['live','Standings']];
 const carColors=[
 '#ef4444','#f97316','#facc15','#22c55e','#06b6d4','#3b82f6',
@@ -6584,7 +6584,54 @@ function defaultState(){return{tab:'setup',settings:{leagueName:'Newfound Poker 
 function deepMerge(base,got){if(!got||typeof got!=='object')return base;for(const k in got){if(got[k]&&typeof got[k]==='object'&&!Array.isArray(got[k])&&base[k]&&typeof base[k]==='object'&&!Array.isArray(base[k]))deepMerge(base[k],got[k]);else base[k]=got[k]}return base}
 function load(){try{return deepMerge(defaultState(),JSON.parse(localStorage.getItem(KEY)||'{}'))}catch(e){return defaultState()}}
 
+
 let state=load();
+(function nfplV375CleanSeason(){
+  const flag='nfpl_v375_clean_season_initialized';
+  try{
+    if(localStorage.getItem(flag))return;
+
+    state.currentWeek=1;
+    state.highHands=[];
+    state.lockedWeeks=[];
+    state.archives=[];
+    state.history=[];
+    state.completedWeeks=[];
+    state.weekAttendance={};
+    state.outOrder=[];
+    state.knockoutLog=[];
+    state.rebuyLog=[];
+    state.tournamentStarted=false;
+    state.finalTableSet=false;
+    state.moveHighlights=[];
+    state.currentBlind=0;
+
+    (state.players||[]).forEach(p=>{
+      p.scores=[];
+      p.checkedIn=false;
+      p.checkinAt=null;
+      p.out=false;
+      p.seat=null;
+      p.table=null;
+      p.locked=false;
+      p.rebuys=0;
+      p.addon1s=0;
+      p.addon2s=0;
+      p.addons=0;
+      p.addonTransactions=[];
+      p.bounties=0;
+      p.eliminatedBy='';
+      p.lastOutOrder=null;
+    });
+
+    const first=(state.settings&&state.settings.blindLevels&&state.settings.blindLevels[0])||{min:15};
+    state.clock={running:false,left:Number(first.min||15)*60,last:Date.now()};
+
+    localStorage.setItem(KEY,JSON.stringify(state));
+    localStorage.setItem(flag,'1');
+  }catch(e){}
+})();
+
 (function applyLocked18BlindStructureV373(){
   const flag='nfpl_phone_v373_locked_18_blinds';
   try{
@@ -8171,7 +8218,7 @@ function buildStandingsPrintHTML(){const data=standings(),weeks=maxWeeks(),leade
 <link rel="manifest" href="./manifest.json">
 <link rel="icon" type="image/png" sizes="192x192" href="./icons/icon-192.png">
 <link rel="icon" type="image/png" sizes="512x512" href="./icons/icon-512.png">
-<link rel="apple-touch-icon" href="./icons/apple-touch-icon.png">
+<link rel="apple-touch-icon" href="./icons/icon-192.png">
 <meta name="mobile-web-app-capable" content="yes">
 
 <style id="nfpl-phone-v20-android">
@@ -11103,7 +11150,7 @@ input:focus,select:focus{
 
 <script id="nfpl-pv2-sync-script">
 const NFPL_SYNC_CONFIG_KEY='nfpl_pv2_sync_config';
-const NFPL_APP_VERSION='NFPL-Phone-v3.7.1';
+const NFPL_APP_VERSION='NFPL-Phone-v3.7.5';
 const NFPL_SYNC_ENDPOINT_KEY='nfpl_amb_sync_endpoint';
 function syncEndpoint(){
   return String(localStorage.getItem(NFPL_SYNC_ENDPOINT_KEY)||window.NFPL_SYNC_ENDPOINT||'').trim();
@@ -11116,9 +11163,9 @@ function setSyncEndpoint(url){
 }
 
 function syncConfig(){
-  let c={linkId:'nfpl-main',deviceId:'',autoSync:true,revision:0,lastCloudAt:'',lastMessage:'Ready'};
+  let c={linkId:'nfpl-2026-27',deviceId:'',autoSync:true,revision:0,lastCloudAt:'',lastMessage:'Ready'};
   try{Object.assign(c,JSON.parse(localStorage.getItem(NFPL_SYNC_CONFIG_KEY)||'{}'));}catch(e){}
-  c.linkId='nfpl-main';
+  c.linkId='nfpl-2026-27';
   c.autoSync=true;
   if(!c.deviceId)c.deviceId='dev-'+Math.random().toString(36).slice(2,8)+'-'+Date.now().toString(36).slice(-4);
   localStorage.setItem(NFPL_SYNC_CONFIG_KEY,JSON.stringify(c));
@@ -15000,6 +15047,30 @@ render();
   }
 }
 </style>
+
+
+<style id="nfpl-v375-hard-remove-event-note">
+.event-mode-note{display:none!important;height:0!important;min-height:0!important;max-height:0!important;margin:0!important;padding:0!important;overflow:hidden!important}
+</style>
+<script id="nfpl-v375-remove-event-note">
+(function(){
+  function removeOldLeagueHelper(){
+    document.querySelectorAll('.event-mode-note').forEach(el=>el.remove());
+    document.querySelectorAll('*').forEach(el=>{
+      if(el.children.length===0){
+        const t=(el.textContent||'').trim();
+        if(t.includes('League mode keeps the season, weekly standings and normal NFPL league flow') ||
+           t.includes('Saved League / Game data is shared automatically through AMB')){
+          el.remove();
+        }
+      }
+    });
+  }
+  document.addEventListener('DOMContentLoaded',removeOldLeagueHelper);
+  const mo=new MutationObserver(removeOldLeagueHelper);
+  mo.observe(document.documentElement,{childList:true,subtree:true});
+})();
+</script>
 
 </body>
 </html>
