@@ -4,7 +4,7 @@
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover">
 <meta name="theme-color" content="#05090d">
-<title>NFPL Phone Control v1.3</title>
+<title>NFPL Phone Control v1.3.1</title>
 <link rel="manifest" href="./manifest.webmanifest">
 <style>
 *{box-sizing:border-box}html,body{margin:0;background:#05090d;color:#f4f7fb;font-family:Inter,system-ui,-apple-system,Segoe UI,sans-serif}
@@ -31,7 +31,7 @@ body{padding:env(safe-area-inset-top) 0 env(safe-area-inset-bottom)}
 .th{display:flex;justify-content:space-between;align-items:center;padding:1px 3px 6px;border-bottom:1px solid rgba(255,164,42,.26);margin-bottom:5px}.th b{font-size:.95rem}.th span{font-size:.6rem;color:#b9c8d6}.th strong{font-size:.58rem;background:#ff951f;color:#111;border-radius:999px;padding:3px 7px}
 .seats{display:grid;grid-template-columns:1fr 1fr;gap:6px}.seat{min-height:90px;border-radius:11px;border:1px solid #77501f;background:linear-gradient(145deg,rgba(255,153,31,.055),transparent 38%),#0b1824;color:#eef5fb;padding:6px;text-align:left;position:relative;overflow:hidden}
 .seat.occupied:before{content:"";position:absolute;left:0;right:0;top:0;height:3px;background:linear-gradient(90deg,#ff7811,#ffb13f,#ff7811)}
-.seatTop{display:flex;justify-content:space-between;font-size:.54rem;color:#ffb45b;font-weight:900}.pm{display:grid;grid-template-columns:48px minmax(0,1fr);gap:5px;align-items:center;margin-top:3px}.car{width:48px;height:38px;display:grid;place-items:center;overflow:hidden}.car svg{max-width:48px!important;max-height:38px!important}.pt{min-width:0}.pt b{display:block;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;font-size:.82rem}.pt span{display:block;color:#ffad57;font-size:.51rem;margin-top:2px;font-weight:800}.stats{display:flex;justify-content:space-between;border-top:1px solid rgba(255,164,42,.18);margin-top:3px;padding-top:3px;color:#c8d2dc;font-size:.52rem}
+.seatTop{display:flex;justify-content:space-between;font-size:.54rem;color:#ffb45b;font-weight:900}.pm{display:grid;grid-template-columns:48px minmax(0,1fr);gap:5px;align-items:center;margin-top:3px}.car{width:48px;height:42px;display:grid;place-items:center;overflow:visible}.car-sprite{--accent:#f97316;position:relative;display:inline-block;width:48px;aspect-ratio:1335/1148;vertical-align:middle;filter:drop-shadow(0 3px 4px rgba(0,0,0,.62));transform-origin:center}.car-sprite .car-base,.car-sprite .car-accent{position:absolute;inset:0;background-repeat:no-repeat;background-position:center;background-size:contain}.car-sprite .car-base{background-image:var(--car-base)}.car-sprite .car-accent{background:var(--accent);-webkit-mask-image:var(--car-mask);mask-image:var(--car-mask);-webkit-mask-repeat:no-repeat;mask-repeat:no-repeat;-webkit-mask-position:center;mask-position:center;-webkit-mask-size:contain;mask-size:contain;mix-blend-mode:multiply;opacity:.98}.pt{min-width:0}.pt b{display:block;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;font-size:.82rem}.pt span{display:block;color:#ffad57;font-size:.51rem;margin-top:2px;font-weight:800}.stats{display:flex;justify-content:space-between;border-top:1px solid rgba(255,164,42,.18);margin-top:3px;padding-top:3px;color:#c8d2dc;font-size:.52rem}
 .empty{border-style:dashed;border-color:#4c5f70;background:#09131c;display:flex;flex-direction:column}.open{flex:1;display:grid;place-items:center;color:#718495;font-weight:900}
 .blank{padding:28px 12px;text-align:center;color:#9fb1c2;border:1px dashed #3e566d;border-radius:14px}
 .modal{position:fixed;inset:0;background:rgba(0,0,0,.74);display:none;align-items:flex-end;justify-content:center;padding:10px;z-index:50}.modal.show{display:flex}.sheet{width:min(430px,100%);background:#0c1925;border:1px solid #a36c25;border-radius:16px;padding:12px}.sheet h3{margin:0 0 8px}.list{display:grid;grid-template-columns:1fr 1fr;gap:6px}.list button,.sheet>.row button{min-height:44px;border-radius:10px;font-weight:900}.list button{background:#e2edf6;color:#17344f;border:0}.row{display:flex;gap:6px;margin-top:8px}.row>*{flex:1}.out{background:#ffd8d0;color:#7d1d13;border:0}.rebuy{background:#c7f1d5;color:#0a6032;border:0}.cancel{background:#1b2c3b;color:#dce8f4;border:1px solid #4c667c}
@@ -77,7 +77,12 @@ function installBridge(){
     };`;
     d.body.appendChild(s);
     bridge=w.NFPL_PHONE_BRIDGE||null;
-    if(bridge){enable();render();return}
+    if(bridge){
+      const engineStyle=w.getComputedStyle(d.documentElement);
+      document.documentElement.style.setProperty('--car-base',engineStyle.getPropertyValue('--car-base'));
+      document.documentElement.style.setProperty('--car-mask',engineStyle.getPropertyValue('--car-mask'));
+      enable();render();return
+    }
   }catch(e){}
   setTimeout(installBridge,350)
 }
