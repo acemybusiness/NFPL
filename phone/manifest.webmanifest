@@ -1,10 +1,15 @@
 {
-  "name": "NFPL Game Control",
-  "short_name": "NFPL Control",
-  "id": "/phone/",
-  "start_url": "./",
+  "id": "/phone/?app=nfpl-v3763",
+  "name": "NFPL",
+  "short_name": "NFPL",
+  "description": "Newfound Poker League phone control",
+  "start_url": "./?app=nfpl-v3763",
   "scope": "./",
   "display": "standalone",
-  "background_color": "#05090d",
-  "theme_color": "#05090d"
+  "orientation": "portrait",
+  "background_color": "#04101f",
+  "theme_color": "#071a33",
+  "icons": [
+    {"src":"./icons/nfpl-icon-v3763.svg?v=3763","sizes":"any","type":"image/svg+xml","purpose":"any"}
+  ]
 }
