@@ -1,4 +1,4 @@
-const CACHE_NAME = "nfpl-v14-matts-sync-v1";
+const CACHE_NAME = "nfpl-v14-matts-sync-v2";
 const STATIC_ASSETS = [
   "./",
   "./index.html",
@@ -31,7 +31,7 @@ async function injectMattSync(response){
   const type=response.headers.get("content-type")||"";
   if(!type.includes("text/html")) return response;
   let html=await response.text();
-  const tag='<script src="/sync-matts-v1.js?v=1"></script>';
+  const tag='<script src="/sync-matts-v1.js?v=2"></script>';
   if(!html.includes('/sync-matts-v1.js')){
     html=html.includes('</body>')?html.replace('</body>',tag+'</body>'):html+tag;
   }
