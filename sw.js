@@ -1,4 +1,4 @@
-const CACHE_NAME = "nfpl-v14-live-pwa-syncfix-2";
+const CACHE_NAME = "nfpl-v14-live-pwa-1";
 const STATIC_ASSETS = [
   "./",
   "./index.html",
@@ -6,8 +6,7 @@ const STATIC_ASSETS = [
   "./icon-192.png",
   "./icon-512.png",
   "./apple-touch-icon.png",
-  "./favicon-32.png",
-  "./sync-hotfix.js"
+  "./favicon-32.png"
 ];
 
 self.addEventListener("install", event => {
@@ -29,30 +28,28 @@ self.addEventListener("activate", event => {
 self.addEventListener("fetch", event => {
   const request = event.request;
   if (request.method !== "GET") return;
+
   const url = new URL(request.url);
+
+  // Do not intercept Google Apps Script or any other external sync/backend requests.
   if (url.origin !== self.location.origin) return;
 
+  // Navigation: prefer the newest live app, then fall back to the cached copy.
   if (request.mode === "navigate") {
-    event.respondWith((async()=>{
-      try{
-        const response = await fetch(request,{cache:"no-store"});
-        const type = response.headers.get("content-type") || "";
-        if (!type.includes("text/html")) return response;
-        let html = await response.text();
-        const tag = '<script src="/sync-hotfix.js?v=2"></script>';
-        if (!html.includes('/sync-hotfix.js')) {
-          html = html.includes('</body>') ? html.replace('</body>', tag + '</body>') : html + tag;
-        }
-        const headers = new Headers(response.headers);
-        headers.delete('content-length');
-        return new Response(html,{status:response.status,statusText:response.statusText,headers});
-      }catch(e){
-        const cached = await caches.match("./index.html");
-        return cached || Response.error();
-      }
-    })());
+    event.respondWith(
+      fetch(request)
+        .then(response => {
+          const copy = response.clone();
+          caches.open(CACHE_NAME).then(cache => cache.put("./index.html", copy));
+          return response;
+        })
+        .catch(() => caches.match("./index.html"))
+    );
     return;
   }
 
-  event.respondWith(caches.match(request).then(cached => cached || fetch(request)));
+  // Local PWA assets: cache-first with a network fallback.
+  event.respondWith(
+    caches.match(request).then(cached => cached || fetch(request))
+  );
 });
