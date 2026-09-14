@@ -156,10 +156,22 @@
         const pack=JSON.parse(res.payload||'{}');
         if(!pack.state)throw new Error('Shared state is empty');
         const localTab=state&&state.tab?state.tab:'setup';
+        /* A silent background refresh may update shared game data, but it must
+           never replace the blind level/timer that is actively running on
+           this device. Manual Sync Now can still intentionally load the
+           shared clock when the local clock is paused. */
+        const protectRunningClock=!!(silent&&state&&state.clock&&state.clock.running);
+        const localBlind=protectRunningClock?Number(state.currentBlind||0):0;
+        const localClock=protectRunningClock?Object.assign({},state.clock):null;
         state=deepMerge(defaultState(),pack.state);
         state.tab=localTab;
+        if(protectRunningClock){
+          const levels=Array.isArray(state.settings&&state.settings.blindLevels)?state.settings.blindLevels:[];
+          state.currentBlind=Math.max(0,Math.min(Math.max(0,levels.length-1),localBlind));
+          state.clock=Object.assign({},state.clock||{},localClock,{running:true,last:Date.now()});
+        }
         normalize();
-        catchUpClock();
+        if(!protectRunningClock)catchUpClock();
         if(Array.isArray(pack.eventLibrary))setEventLibraryNoSync(pack.eventLibrary);
         localStorage.setItem(KEY,JSON.stringify(state));
         nfplSync.revision=Number(res.revision||0);
