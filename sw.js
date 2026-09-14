@@ -1,4 +1,4 @@
-const CACHE_NAME = "nfpl-v14-live-pwa-1";
+const CACHE_NAME = "nfpl-v14-matts-sync-v1";
 const STATIC_ASSETS = [
   "./",
   "./index.html",
@@ -6,7 +6,8 @@ const STATIC_ASSETS = [
   "./icon-192.png",
   "./icon-512.png",
   "./apple-touch-icon.png",
-  "./favicon-32.png"
+  "./favicon-32.png",
+  "./sync-matts-v1.js"
 ];
 
 self.addEventListener("install", event => {
@@ -25,31 +26,44 @@ self.addEventListener("activate", event => {
   );
 });
 
+async function injectMattSync(response){
+  if(!response) return response;
+  const type=response.headers.get("content-type")||"";
+  if(!type.includes("text/html")) return response;
+  let html=await response.text();
+  const tag='<script src="/sync-matts-v1.js?v=1"></script>';
+  if(!html.includes('/sync-matts-v1.js')){
+    html=html.includes('</body>')?html.replace('</body>',tag+'</body>'):html+tag;
+  }
+  const headers=new Headers(response.headers);
+  headers.delete('content-length');
+  return new Response(html,{status:response.status,statusText:response.statusText,headers});
+}
+
 self.addEventListener("fetch", event => {
   const request = event.request;
   if (request.method !== "GET") return;
-
   const url = new URL(request.url);
 
-  // Do not intercept Google Apps Script or any other external sync/backend requests.
+  // Never intercept the Google Apps Script sync backend or any external request.
   if (url.origin !== self.location.origin) return;
 
-  // Navigation: prefer the newest live app, then fall back to the cached copy.
+  // Root navigation uses the locked app plus the sync-only Matt-style module.
   if (request.mode === "navigate") {
-    event.respondWith(
-      fetch(request)
-        .then(response => {
-          const copy = response.clone();
-          caches.open(CACHE_NAME).then(cache => cache.put("./index.html", copy));
-          return response;
-        })
-        .catch(() => caches.match("./index.html"))
-    );
+    event.respondWith((async()=>{
+      try{
+        const response=await fetch(request,{cache:"no-store"});
+        const copy=response.clone();
+        caches.open(CACHE_NAME).then(cache=>cache.put("./index.html",copy)).catch(()=>{});
+        return injectMattSync(response);
+      }catch(e){
+        const cached=await caches.match("./index.html");
+        return cached?injectMattSync(cached):Response.error();
+      }
+    })());
     return;
   }
 
-  // Local PWA assets: cache-first with a network fallback.
-  event.respondWith(
-    caches.match(request).then(cached => cached || fetch(request))
-  );
+  // Local PWA assets remain cache-first with network fallback.
+  event.respondWith(caches.match(request).then(cached => cached || fetch(request)));
 });
