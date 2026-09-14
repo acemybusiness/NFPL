@@ -1,0 +1,58 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover">
+<meta name="theme-color" content="#071a33">
+<meta name="application-name" content="NFPL">
+<meta name="mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-title" content="NFPL">
+<title>Install NFPL</title>
+<link rel="manifest" href="/manifest.webmanifest?v=14i2">
+<link rel="icon" type="image/png" sizes="192x192" href="/icon-192.png?v=14i2">
+<link rel="shortcut icon" type="image/png" href="/icon-192.png?v=14i2">
+<link rel="apple-touch-icon" sizes="192x192" href="/apple-touch-icon.png?v=14i2">
+<style>
+html,body{margin:0;background:#04101f;color:#fff;font-family:system-ui,-apple-system,Segoe UI,sans-serif;min-height:100%}
+main{max-width:520px;margin:0 auto;padding:28px 18px;text-align:center}
+img{width:160px;height:160px;border-radius:28px;display:block;margin:10px auto 22px}
+h1{margin:0 0 8px;font-size:2rem}.muted{color:#b8d0e7;line-height:1.45}.card{background:#0d294c;border:1px solid #2d5178;border-radius:18px;padding:18px;margin-top:22px}.btn{width:100%;min-height:54px;border:0;border-radius:14px;background:#ff8a00;color:#211406;font-weight:900;font-size:1.05rem}.btn[hidden]{display:none}.small{font-size:.9rem;color:#b8d0e7;margin-top:14px}
+</style>
+</head>
+<body>
+<main>
+<img src="/icon-192.png?v=14i2" alt="NFPL icon">
+<h1>NFPL</h1>
+<p class="muted">Newfound Poker League</p>
+<div class="card">
+<button id="installBtn" class="btn" hidden>Install NFPL</button>
+<p id="status" class="small">Loading the NFPL installer…</p>
+</div>
+<p class="small"><a href="/" style="color:#ffae32">Open NFPL</a></p>
+</main>
+<script>
+let deferredPrompt=null;
+const btn=document.getElementById('installBtn');
+const status=document.getElementById('status');
+if('serviceWorker' in navigator){
+  window.addEventListener('load',()=>navigator.serviceWorker.register('/sw.js?v=14i2',{scope:'/'}).then(r=>r.update()).catch(()=>{}));
+}
+window.addEventListener('beforeinstallprompt',e=>{
+  e.preventDefault();
+  deferredPrompt=e;
+  btn.hidden=false;
+  status.textContent='Ready to install with the NFPL icon.';
+});
+btn.addEventListener('click',async()=>{
+  if(!deferredPrompt)return;
+  deferredPrompt.prompt();
+  await deferredPrompt.userChoice;
+  deferredPrompt=null;
+  btn.hidden=true;
+});
+window.addEventListener('appinstalled',()=>{status.textContent='NFPL installed. You can now open it from your home screen.';});
+setTimeout(()=>{if(!deferredPrompt){status.textContent='If the orange Install NFPL button does not appear, open Chrome’s menu and choose Install app while on this page.';}},2500);
+</script>
+</body>
+</html>
