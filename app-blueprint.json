@@ -1,0 +1,23 @@
+{
+  "appId": "NFPL",
+  "owner": "SRL",
+  "title": "Newfound Poker League",
+  "sourceVersion": "v88.83",
+  "candidate": "Matt-style clean PWA",
+  "platform": "PWA / Browser App",
+  "responsiveTargets": ["390x844 phone", "laptop"],
+  "sync": {
+    "provider": "Google Apps Script + Google Sheet",
+    "linkId": "nfpl-main",
+    "liveActivation": "Sam approval required"
+  },
+  "preserves": [
+    "v88.83 game logic",
+    "Week 1 standings data",
+    "OCR review workflow",
+    "blind clock",
+    "tables and player records",
+    "local storage",
+    "phone and laptop layouts"
+  ]
+}
