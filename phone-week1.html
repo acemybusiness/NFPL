@@ -1,0 +1,64 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover">
+<title>NFPL Week 1</title>
+<style>html,body{margin:0;width:100%;height:100%;overflow:hidden;background:#04101f}iframe{display:block;width:100%;height:100%;border:0}</style>
+</head>
+<body>
+<iframe id="app" src="./index.html?v=week1-2" title="NFPL"></iframe>
+<script>
+const frame=document.getElementById('app');
+frame.addEventListener('load',()=>{
+  const d=frame.contentDocument;
+  if(!d)return;
+  const s=d.createElement('script');
+  s.textContent=`(function(){
+    if(window.__NFPL_WEEK1_ENTRY_V2__)return; window.__NFPL_WEEK1_ENTRY_V2__=true;
+    function byNameOrAlias(x){x=String(x).toUpperCase();return state.players.find(p=>String(p.name||'').toUpperCase()===x||String(p.alias||'').toUpperCase()===x)}
+    function ensureSteve(){
+      if(state.players.some(p=>String(p.name||'').toUpperCase()==='STEVE'||String(p.alias||'').toUpperCase()==='STEVE'))return;
+      const p={id:uid(),name:'Steve',number:nextAvailablePlayerNumber(),carColor:nextUnusedCarColor(),scores:[],active:true,checkedIn:false,checkinAt:null,out:false,seat:null,table:null,locked:false,preferredTable:1,preferredSeat:1,partner:'',alias:'',stack:Number(state.settings.startingStack||7000),rebuys:0,addon1s:0,addon2s:0,addons:0,addonTransactions:[],bounties:0,bountyBuyIn:false,badBeatBuyIn:false,highHandBuyIn:false,startingAddonSelected:false,eliminatedBy:'',lastOutOrder:null,knockouts:0,knockoutEvents:[]};
+      state.players.push(p); if(typeof syncAlphabeticalPlayerNumbers==='function')syncAlphabeticalPlayerNumbers();
+    }
+    function baseWeek1(){
+      ensureSteve();
+      const rank={
+        'MATTY-ICE':13,'WENDY':11,'JIMMY':7,'JESS':2,'GORDO':12,'JEFF':5,'ERNLY':8,'DAN':10,'BO':3,'RICH':4,'KIMMY':6
+      };
+      state.players.forEach(p=>{p.scores=Array.isArray(p.scores)?p.scores:[];while(p.scores.length<1)p.scores.push(null);p.scores[0]=18;});
+      Object.entries(rank).forEach(([n,r])=>{const p=byNameOrAlias(n);if(p)p.scores[0]=r-1;});
+      state.settings.absentScore=18;
+      state.currentWeek=1;
+      state.weekAttendance=state.weekAttendance&&typeof state.weekAttendance==='object'?state.weekAttendance:{};
+      const attending=['MATTY-ICE','WENDY','JIMMY','JESS','GORDO','JEFF','ERNLY','DAN','BO','RICH','KIMMY'];
+      const ids=attending.map(byNameOrAlias).filter(Boolean).map(p=>p.id);
+      state.weekAttendance[1]={...(state.weekAttendance[1]||{}),week:1,rosterIds:state.players.filter(p=>p.active!==false).map(p=>p.id),checkedIds:ids,absentIds:state.players.filter(p=>p.active!==false&&!ids.includes(p.id)).map(p=>p.id),rosterSize:state.players.filter(p=>p.active!==false).length};
+    }
+    function saveShawns(winnerName){
+      const a=byNameOrAlias('ALL-DAY'),t=byNameOrAlias('TEDDY'); if(!a||!t)return;
+      if(winnerName==='ALL-DAY'){a.scores[0]=0;t.scores[0]=8;}else{t.scores[0]=0;a.scores[0]=8;}
+      const ids=new Set(state.weekAttendance[1].checkedIds||[]);ids.add(a.id);ids.add(t.id);state.weekAttendance[1].checkedIds=[...ids];state.weekAttendance[1].absentIds=(state.weekAttendance[1].rosterIds||[]).filter(id=>!ids.has(id));
+      state.completedWeeks=Array.isArray(state.completedWeeks)?state.completedWeeks:[];if(!state.completedWeeks.includes(1))state.completedWeeks.push(1);
+      state.lockedWeeks=Array.isArray(state.lockedWeeks)?state.lockedWeeks:[];if(!state.lockedWeeks.includes(1))state.lockedWeeks.push(1);
+      save();render();document.getElementById('week1ShawnChoice')?.remove();toast('Week 1 standings saved');
+    }
+    function chooseShawn(){
+      if(document.getElementById('week1ShawnChoice'))return;
+      const w=document.createElement('div');w.id='week1ShawnChoice';w.className='ko-overlay';
+      w.innerHTML='<div class="ko-modal"><h3>Week 1 — two Shawns</h3><p>The paper shows one Shawn in 1st and the other in 9th. Which nickname is the Shawn who WON?</p><div class="ko-list"><button class="ko-choice" id="w1AllDay"><span><b>All-Day won</b><small>All-Day = 1st • Teddy = 9th</small></span></button><button class="ko-choice" id="w1Teddy"><span><b>Teddy won</b><small>Teddy = 1st • All-Day = 9th</small></span></button></div></div>';
+      document.body.appendChild(w);document.getElementById('w1AllDay').onclick=()=>saveShawns('ALL-DAY');document.getElementById('w1Teddy').onclick=()=>saveShawns('TEDDY');
+    }
+    function installUnknown(){
+      if(typeof window.openKnockout!=='function'||window.__UNKNOWN_INSTALLED)return;window.__UNKNOWN_INSTALLED=true;
+      const old=window.openKnockout;window.openKnockout=function(id){const r=old.apply(this,arguments);setTimeout(()=>{const o=document.getElementById('koOverlay'),list=o&&o.querySelector('.ko-list');if(!list||list.querySelector('[data-unknown-ko]'))return;const b=document.createElement('button');b.className='ko-choice';b.dataset.unknownKo='1';b.innerHTML='<span><b>Unknown / Not Recorded</b><small>Marks the player out without crediting a knockout or bounty.</small></span>';b.onclick=()=>{if(typeof closeKnockout==='function')closeKnockout();markOut(id);toast('Saved as Unknown — no knockout or bounty credited');};list.appendChild(b);},0);return r;};
+    }
+    baseWeek1();save();render();installUnknown();
+    const a=byNameOrAlias('ALL-DAY'),t=byNameOrAlias('TEDDY');if(!(a&&t&&((a.scores[0]===0&&t.scores[0]===8)||(t.scores[0]===0&&a.scores[0]===8))))setTimeout(chooseShawn,350);
+  })();`;
+  d.body.appendChild(s);
+});
+</script>
+</body>
+</html>
