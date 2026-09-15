@@ -7,21 +7,29 @@
 <style>html,body{margin:0;width:100%;height:100%;overflow:hidden;background:#04101f}iframe{display:block;width:100%;height:100%;border:0}</style>
 </head>
 <body>
-<iframe id="app" src="./index.html?v=nfpl29-lock-1" title="NFPL -29"></iframe>
+<iframe id="app" src="./index.html?v=nfpl29-lock-2" title="NFPL -29"></iframe>
 <script>
 const frame=document.getElementById('app');
 frame.addEventListener('load',()=>{
   const d=frame.contentDocument;if(!d)return;
   const s=d.createElement('script');
   s.textContent=`(function(){
-    if(window.__NFPL29_LOCKED_BUILD__)return;window.__NFPL29_LOCKED_BUILD__=true;
+    if(window.__NFPL29_LOCKED_BUILD_V2__)return;window.__NFPL29_LOCKED_BUILD_V2__=true;
 
-    const WEEK1_SCORES={'FRENCHIE':19,'KAYLA':18,'J2C':17,'ERNLY':16,'CEPHUS':15,'SAM':14,'MATTY-ICE':13,'STU':12,'Q2B':11,'SOQ':10,'LPQ':9,'B-WIDOW':8,'JOKER':7,'YODA':6,'S-KING':5,'ALL-DAY':4,'7X':3,'JK47':2,'TEDDY':0};
+    const WEEK1_SCORES={'FRENCHIE':19,'KAYLA':18,'J2C':17,'ERNLY':16,'CEPHUS':15,'SAM':14,'MATTY-ICE':13,'STEVE':12,'Q2B':11,'SOQ':10,'LPQ':9,'B-WIDOW':8,'JOKER':7,'YODA':6,'S-KING':5,'ALL-DAY':4,'7X':3,'JK47':2,'TEDDY':0};
     const WEEK1_PLAYERS=Object.keys(WEEK1_SCORES);
 
     function findPlayer(x){
       x=String(x).toUpperCase();
       return state.players.find(p=>String(p.name||'').toUpperCase()===x||String(p.alias||'').toUpperCase()===x);
+    }
+
+    function removeStu(){
+      const stu=state.players.find(p=>String(p.name||'').toUpperCase()==='STU');
+      if(!stu)return;
+      state.tables=(state.tables||[]).map(t=>({...t,seats:(t.seats||[]).map(seat=>seat&&seat.playerId===stu.id?{...seat,playerId:null}:seat)}));
+      state.players.forEach(p=>{if(p.partner===stu.id)p.partner='';});
+      state.players=state.players.filter(p=>p.id!==stu.id);
     }
 
     function ensureSteve(){
@@ -35,16 +43,14 @@ frame.addEventListener('load',()=>{
 
     function enforceLockedSeason(){
       if(!state||!state.settings||!Array.isArray(state.players))return;
-
       state.settings.season='NFPL -29';
       state.settings.leagueName='Newfound Poker League';
       state._nfpl29SeasonLocked=true;
       state._nfpl29Week1Locked=true;
 
-      const steve=ensureSteve();
-      steve.scores=Array.isArray(steve.scores)?steve.scores:[];
-      while(steve.scores.length<1)steve.scores.push(null);
-      steve.scores[0]=19;
+      removeStu();
+      ensureSteve();
+      if(typeof syncAlphabeticalPlayerNumbers==='function')syncAlphabeticalPlayerNumbers();
 
       const checkedIds=[];
       const lockedRosterIds=[];
@@ -53,15 +59,15 @@ frame.addEventListener('load',()=>{
         p.scores=Array.isArray(p.scores)?p.scores:[];
         while(p.scores.length<1)p.scores.push(null);
         p.scores[0]=WEEK1_SCORES[name];
+        p.checkedIn=true;
         checkedIds.push(p.id);
         lockedRosterIds.push(p.id);
       });
-      lockedRosterIds.push(steve.id);
 
       state.settings.absentScore=19;
       state.weekAttendance=state.weekAttendance&&typeof state.weekAttendance==='object'?state.weekAttendance:{};
       const prior=state.weekAttendance[1]||{};
-      state.weekAttendance[1]={...prior,week:1,rosterIds:[...lockedRosterIds],checkedIds:[...checkedIds],absentIds:[steve.id],rosterSize:lockedRosterIds.length,finalized:true,locked:true};
+      state.weekAttendance[1]={...prior,week:1,rosterIds:[...lockedRosterIds],checkedIds:[...checkedIds],absentIds:[],rosterSize:lockedRosterIds.length,finalized:true,locked:true};
 
       state.completedWeeks=Array.isArray(state.completedWeeks)?state.completedWeeks:[];
       if(!state.completedWeeks.includes(1))state.completedWeeks.push(1);
@@ -134,8 +140,6 @@ frame.addEventListener('load',()=>{
     if(typeof render==='function')render();
     addLockBadge();
 
-    // Re-assert only the protected season facts after any background sync/pull.
-    // This does NOT reset current week, tables, current tournament status, or future weeks.
     setInterval(()=>{
       try{
         enforceLockedSeason();
@@ -147,7 +151,7 @@ frame.addEventListener('load',()=>{
     },3000);
 
     if(typeof syncPush==='function')setTimeout(()=>{try{syncPush(true)}catch(e){}},1200);
-    if(typeof toast==='function')toast('NFPL -29 locked • Week 1 protected • Steve added');
+    if(typeof toast==='function')toast('NFPL -29 locked • Steve replaces Stu • Week 1 protected');
   })();`;
   d.body.appendChild(s);
 });
