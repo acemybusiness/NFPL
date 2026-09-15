@@ -1,0 +1,188 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover">
+<meta name="theme-color" content="#071a33">
+<title>NFPL - 29</title>
+<style>html,body{margin:0;width:100%;height:100%;overflow:hidden;background:#04101f}iframe{display:block;width:100%;height:100%;border:0;background:#04101f}</style>
+</head>
+<body>
+<iframe id="nfpl" src="./index.html?v=781280b8" title="NFPL - 29"></iframe>
+<script>
+const frame=document.getElementById('nfpl');
+frame.addEventListener('load',()=>{
+  const w=frame.contentWindow,d=frame.contentDocument;
+  if(!w||!d||w.__NFPL29_PATCHED__)return;
+  w.__NFPL29_PATCHED__=true;
+
+  const WEEK1={
+    'FRENCHIE':19,'KAYLA':18,'J2C':17,'ERNLY':16,'CEPHUS':15,'SAM':14,
+    'MATTY-ICE':13,'STEVE':12,'Q2B':11,'SOQ':10,'LPQ':9,'B-WIDOW':8,
+    'JOKER':7,'YODA':6,'S-KING':5,'ALL-DAY':4,'7X':3,'JK47':2,'TEDDY':0
+  };
+
+  function pByName(name){
+    const key=String(name||'').trim().toUpperCase();
+    return (w.state?.players||[]).find(p=>String(p.name||'').trim().toUpperCase()===key||String(p.alias||'').trim().toUpperCase()===key);
+  }
+
+  function nextColor(){
+    try{return typeof w.nextUnusedCarColor==='function'?w.nextUnusedCarColor():'#0ea5e9'}catch{return '#0ea5e9'}
+  }
+
+  function replaceStuWithSteve(){
+    if(!w.state||!Array.isArray(w.state.players))return null;
+    let steve=pByName('STEVE');
+    if(steve)return steve;
+    const stu=pByName('STU');
+    if(stu){stu.name='Steve';stu.alias='';return stu;}
+    const id=typeof w.uid==='function'?w.uid():'steve-'+Date.now();
+    steve={id,name:'Steve',number:0,carColor:nextColor(),scores:[],active:true,checkedIn:false,checkinAt:null,out:false,seat:null,table:null,locked:false,preferredTable:1,preferredSeat:1,partner:'',alias:'',stack:Number(w.state.settings?.startingStack||7000),rebuys:0,addon1s:0,addon2s:0,addons:0,addonTransactions:[],bounties:0,bountyBuyIn:false,badBeatBuyIn:false,highHandBuyIn:false,startingAddonSelected:false,eliminatedBy:'',lastOutOrder:null,knockouts:0,knockoutEvents:[]};
+    w.state.players.push(steve);
+    return steve;
+  }
+
+  function renameFinnToKaylaIfNeeded(){
+    if(pByName('KAYLA'))return;
+    const finn=pByName('FINN');
+    if(finn){finn.name='Kayla';finn.alias='';}
+  }
+
+  function ensureJK47(){
+    if(pByName('JK47'))return;
+    const id=typeof w.uid==='function'?w.uid():'jk47-'+Date.now();
+    w.state.players.push({id,name:'JK47',number:0,carColor:nextColor(),scores:[],active:true,checkedIn:false,checkinAt:null,out:false,seat:null,table:null,locked:false,preferredTable:1,preferredSeat:1,partner:'',alias:'',stack:Number(w.state.settings?.startingStack||7000),rebuys:0,addon1s:0,addon2s:0,addons:0,addonTransactions:[],bounties:0,bountyBuyIn:false,badBeatBuyIn:false,highHandBuyIn:false,startingAddonSelected:false,eliminatedBy:'',lastOutOrder:null,knockouts:0,knockoutEvents:[]});
+  }
+
+  function initializeSeasonOnce(){
+    if(!w.state||!w.state.settings)return;
+    w.state.settings.leagueName='Newfound Poker League';
+    w.state.settings.season='NFPL - 29';
+    replaceStuWithSteve();
+    renameFinnToKaylaIfNeeded();
+    ensureJK47();
+
+    if(w.state._nfpl29Week1Initialized)return;
+
+    const week1Ids=[];
+    Object.entries(WEEK1).forEach(([name,score])=>{
+      const p=pByName(name); if(!p)return;
+      p.active=true;
+      p.scores=Array.isArray(p.scores)?p.scores:[];
+      while(p.scores.length<1)p.scores.push(null);
+      p.scores[0]=score;
+      p.checkedIn=true;
+      p.out=false;
+      p.lastOutOrder=null;
+      week1Ids.push(p.id);
+    });
+
+    // Keep historical players rather than deleting them; only the Week 1 roster is locked to the supplied 19 players.
+    w.state.settings.absentScore=19;
+    w.state.weekAttendance=w.state.weekAttendance&&typeof w.state.weekAttendance==='object'?w.state.weekAttendance:{};
+    w.state.weekAttendance[1]={...(w.state.weekAttendance[1]||{}),week:1,rosterIds:[...week1Ids],checkedIds:[...week1Ids],absentIds:[],rosterSize:week1Ids.length,locked:true,finalized:true};
+
+    w.state.completedWeeks=Array.isArray(w.state.completedWeeks)?w.state.completedWeeks:[];
+    if(!w.state.completedWeeks.includes(1))w.state.completedWeeks.push(1);
+    w.state.lockedWeeks=Array.isArray(w.state.lockedWeeks)?w.state.lockedWeeks:[];
+    if(!w.state.lockedWeeks.includes(1))w.state.lockedWeeks.push(1);
+
+    w.state.highHands=Array.isArray(w.state.highHands)?w.state.highHands:[];
+    const gordon=pByName('GORDO')||pByName('S-KING');
+    const hh={week:'W1',player:gordon?gordon.name:'S-King',hand:'QQQ66',updatedAt:Date.now(),locked:true};
+    const hi=w.state.highHands.findIndex(h=>String(h.week).toUpperCase()==='W1'||Number(h.week)===1);
+    if(hi>=0)w.state.highHands[hi]={...w.state.highHands[hi],...hh}; else w.state.highHands.push(hh);
+
+    w.state._nfpl29Week1Initialized=true;
+    w.state._nfpl29LeagueLocked=true;
+    if(Number(w.state.currentWeek||1)<=1)w.state.currentWeek=2;
+    if(typeof w.syncAlphabeticalPlayerNumbers==='function')w.syncAlphabeticalPlayerNumbers();
+    if(typeof w.save==='function')w.save();
+  }
+
+  function installUnknown(){
+    if(typeof w.openKnockout!=='function'||w.__NFPL29_UNKNOWN__)return;
+    w.__NFPL29_UNKNOWN__=true;
+    const original=w.openKnockout;
+    w.openKnockout=function(id){
+      const result=original.apply(this,arguments);
+      setTimeout(()=>{
+        const overlay=d.getElementById('koOverlay');
+        const list=overlay&&overlay.querySelector('.ko-list');
+        if(!list||list.querySelector('[data-nfpl29-unknown]'))return;
+        const b=d.createElement('button');
+        b.className='ko-choice'; b.dataset.nfpl29Unknown='1';
+        b.innerHTML='<span><b>Unknown / Not Recorded</b><small>Player is out. No knockout or bounty is credited.</small></span>';
+        b.onclick=()=>{try{if(typeof w.closeKnockout==='function')w.closeKnockout();if(typeof w.markOut==='function')w.markOut(id);if(typeof w.toast==='function')w.toast('Saved as Unknown / Not Recorded');}catch(e){console.error(e)}};
+        list.appendChild(b);
+      },0);
+      return result;
+    };
+  }
+
+  function protectDestructive(name){
+    const fn=w[name];
+    if(typeof fn!=='function'||fn.__nfpl29Protected)return;
+    const wrapped=function(){
+      const answer=w.prompt('NFPL - 29 is locked. Type UNLOCK to delete or reset league data.');
+      if(String(answer||'').trim().toUpperCase()!=='UNLOCK'){
+        if(typeof w.toast==='function')w.toast('League locked — nothing deleted');
+        return;
+      }
+      return fn.apply(this,arguments);
+    };
+    wrapped.__nfpl29Protected=true;
+    w[name]=wrapped;
+  }
+
+  function installProtection(){
+    ['deletePlayer','resetAll','resetApp','resetLeague','clearLeague','clearAllData','resetEverything'].forEach(protectDestructive);
+  }
+
+  function seasonBadge(){
+    let badge=d.getElementById('nfpl29SeasonBadge');
+    if(badge)return;
+    const host=d.querySelector('.hero .head')||d.querySelector('.hero');
+    if(!host)return;
+    badge=d.createElement('div');
+    badge.id='nfpl29SeasonBadge';
+    badge.textContent='NFPL - 29 • LEAGUE LOCKED • WEEK 1 LOCKED';
+    badge.style.cssText='margin-top:6px;padding:6px 9px;border:1px solid #ffae32;border-radius:999px;color:#ffcf78;background:#102a4d;font-size:.68rem;font-weight:900;text-align:center';
+    host.appendChild(badge);
+  }
+
+  function fallbackStandings(){
+    const bodyText=d.body?.innerText||'';
+    if(!bodyText.includes('function renderStandings()')&&!bodyText.includes('${state.currentWeek}'))return;
+    let page=d.querySelector('#standings,.page[data-page="standings"],[data-page="standings"].page');
+    if(!page){
+      const raw=[...d.querySelectorAll('.page,section,main,div')].find(el=>(el.innerText||'').includes('function renderStandings()'));
+      page=raw?.closest('.page')||raw;
+    }
+    if(!page||page.dataset.nfpl29FixedStandings)return;
+    page.dataset.nfpl29FixedStandings='1';
+    const rows=Object.entries(WEEK1).sort((a,b)=>a[1]-b[1]);
+    const hh='Gordon / S-King — QQQ66';
+    page.innerHTML=`<div class="card"><div class="section-title"><h2>NFPL - 29 Standings</h2><span class="small">Week 1 locked</span></div><div style="margin:8px 0;font-weight:900;color:#ffae32">High Hand: ${hh}</div><div class="table-wrap"><table class="standings"><thead><tr><th>Place</th><th>Player</th><th>Points</th></tr></thead><tbody>${rows.map(([n,s],i)=>`<tr><td>${i+1}</td><td class="name">${n==='S-KING'?'S-King':n==='MATTY-ICE'?'Matty-ICE':n==='B-WIDOW'?'B-Widow':n==='ALL-DAY'?'All-Day':n==='J2C'?'J2C':n==='JK47'?'JK47':n==='7X'?'7X':n.charAt(0)+n.slice(1).toLowerCase()}</td><td>${s}</td></tr>`).join('')}</tbody></table></div></div>`;
+  }
+
+  initializeSeasonOnce();
+  installUnknown();
+  installProtection();
+  if(typeof w.render==='function')w.render();
+  seasonBadge();
+  fallbackStandings();
+
+  // Guard only locked metadata; never re-seed player/week data after initialization.
+  setInterval(()=>{
+    try{
+      if(w.state?.settings){w.state.settings.leagueName='Newfound Poker League';w.state.settings.season='NFPL - 29';}
+      installUnknown();installProtection();seasonBadge();fallbackStandings();
+      if(typeof w.save==='function')w.save();
+    }catch(e){console.warn(e)}
+  },4000);
+});
+</script>
+</body>
+</html>
