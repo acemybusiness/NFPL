@@ -1,4 +1,4 @@
-const CACHE_NAME = "nfpl-v14-matts-sync-v2";
+const CACHE_NAME = "nfpl-v14-matts-sync-v3-restore";
 const STATIC_ASSETS = [
   "./",
   "./index.html",
@@ -31,7 +31,7 @@ async function injectMattSync(response){
   const type=response.headers.get("content-type")||"";
   if(!type.includes("text/html")) return response;
   let html=await response.text();
-  const tag='<script src="/sync-matts-v1.js?v=2"></script>';
+  const tag='<script src="/sync-matts-v1.js?v=3"></script>';
   if(!html.includes('/sync-matts-v1.js')){
     html=html.includes('</body>')?html.replace('</body>',tag+'</body>'):html+tag;
   }
@@ -45,10 +45,8 @@ self.addEventListener("fetch", event => {
   if (request.method !== "GET") return;
   const url = new URL(request.url);
 
-  // Never intercept the Google Apps Script sync backend or any external request.
   if (url.origin !== self.location.origin) return;
 
-  // Root navigation uses the locked app plus the sync-only Matt-style module.
   if (request.mode === "navigate") {
     event.respondWith((async()=>{
       try{
@@ -64,6 +62,5 @@ self.addEventListener("fetch", event => {
     return;
   }
 
-  // Local PWA assets remain cache-first with network fallback.
   event.respondWith(caches.match(request).then(cached => cached || fetch(request)));
 });
